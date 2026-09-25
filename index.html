@@ -46,8 +46,22 @@
   /* ---------- scroll reveal + progress ---------- */
   #scroll-progress{position:fixed; top:0; left:0; height:2px; width:0%; z-index:100;
     background:linear-gradient(90deg, var(--cyan), var(--magenta)); transition:width .08s linear;}
-  .reveal{opacity:0; transform:translateY(18px); transition:opacity .7s cubic-bezier(.16,.8,.3,1), transform .7s cubic-bezier(.16,.8,.3,1);}
+  .reveal{opacity:0; transform:translateY(34px) scale(.96); transition:opacity .5s cubic-bezier(.22,1,.36,1), transform .75s cubic-bezier(.22,1.4,.36,1);}
   .reveal.in{opacity:1; transform:none;}
+
+  @keyframes heroUp{from{opacity:0; transform:translateY(26px);} to{opacity:1; transform:none;}}
+  .hero .kicker, .hero h1, .hero p.lede, .hero .cta-row{opacity:0; animation:heroUp .7s cubic-bezier(.16,1,.3,1) forwards;}
+  .hero .kicker{animation-delay:.05s;}
+  .hero h1{animation-delay:.12s;}
+  .hero p.lede{animation-delay:.22s;}
+  .hero .cta-row{animation-delay:.32s;}
+
+  @keyframes popScale{0%{transform:scale(1);} 45%{transform:scale(1.14);} 100%{transform:scale(1);}}
+  .count{display:inline-block;}
+  .count.pop{animation:popScale .45s cubic-bezier(.34,1.56,.64,1);}
+
+  @keyframes attackPulse{0%{box-shadow:0 0 0 0 rgba(255,84,104,.6);} 100%{box-shadow:0 0 0 18px rgba(255,84,104,0);}}
+  .slider-shell.pulse-attack{animation:attackPulse .7s ease-out;}
 
   /* ---------- shared ---------- */
   .wrap{max-width:1180px; margin:0 auto; padding-inline:24px;}
@@ -72,7 +86,7 @@
   .brand-dot{width:9px; height:9px; border-radius:50%; background:var(--magenta); box-shadow:0 0 10px var(--magenta); flex:none;}
   .navlinks{display:flex; gap:26px; font-family:'IBM Plex Mono',monospace; font-size:12.5px; letter-spacing:0.05em; text-transform:uppercase; color:var(--fg-dim);}
   .navlinks a{text-decoration:none; transition:color .15s ease; position:relative; padding-bottom:2px;}
-  .navlinks a::after{content:""; position:absolute; left:0; right:100%; bottom:-3px; height:1px; background:var(--cyan); transition:right .25s ease;}
+  .navlinks a::after{content:""; position:absolute; left:0; right:100%; bottom:-3px; height:1px; background:var(--cyan); transition:right .35s cubic-bezier(.22,1.4,.36,1);}
   .navlinks a:hover{color:var(--fg);}
   .navlinks a.active{color:var(--cyan);}
   .navlinks a.active::after{right:0;}
@@ -99,13 +113,15 @@
   .btn{
     font-family:'IBM Plex Mono',monospace; font-size:13px; letter-spacing:0.04em; text-transform:uppercase;
     padding:13px 22px; border-radius:3px; text-decoration:none; display:inline-flex; align-items:center; gap:9px;
-    transition:transform .15s ease, box-shadow .15s ease, background .15s ease; border:1px solid transparent; cursor:pointer;
+    transition:transform .2s cubic-bezier(.22,1.4,.36,1), box-shadow .2s ease, background .15s ease, border-color .15s ease; border:1px solid transparent; cursor:pointer;
   }
   .btn:focus-visible{outline:2px solid var(--cyan); outline-offset:2px;}
   .btn-primary{background:var(--magenta); color:#0a0c12; font-weight:600;}
-  .btn-primary:hover{transform:translateY(-1px); box-shadow:0 8px 24px -8px rgba(255,46,147,0.6);}
+  .btn-primary:hover{transform:translateY(-2px) scale(1.02); box-shadow:0 10px 28px -8px rgba(255,46,147,0.65);}
+  .btn-primary:active{transform:translateY(0) scale(.98);}
+  .btn-ghost:hover{border-color:var(--cyan); color:var(--cyan); transform:translateY(-2px);}
+  .btn-ghost:active{transform:translateY(0);}
   .btn-ghost{border-color:var(--line); color:var(--fg);}
-  .btn-ghost:hover{border-color:var(--cyan); color:var(--cyan);}
 
   .telemetry-card{
     background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:22px;
@@ -140,8 +156,8 @@
   .pipeline{display:grid; grid-template-columns:repeat(5,1fr); gap:2px; background:var(--line);}
   @media (max-width:900px){.pipeline{grid-template-columns:1fr 1fr;}}
   @media (max-width:520px){.pipeline{grid-template-columns:1fr;}}
-  .stage{background:var(--panel); padding:24px 20px; position:relative; transition:transform .25s ease, background .25s ease;}
-  .stage:hover{transform:translateY(-4px);}
+  .stage{background:var(--panel); padding:24px 20px; position:relative; transition:transform .25s cubic-bezier(.22,1.4,.36,1), background .25s ease;}
+  .stage:hover{transform:translateY(-5px);}
   .stage .n{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--fg-faint); letter-spacing:0.1em;}
   .stage h3{font-size:15px; margin:10px 0 8px; text-transform:none; letter-spacing:0; font-weight:600; font-family:'IBM Plex Sans';}
   .stage p{font-size:12.8px; color:var(--fg-dim); line-height:1.55; margin:0;}
@@ -156,8 +172,8 @@
   @media (max-width:600px){.dash{padding:22px 18px;}}
   .metric-row{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:6px; overflow:hidden; margin-bottom:36px;}
   @media (max-width:760px){.metric-row{grid-template-columns:1fr 1fr;}}
-  .metric{background:var(--panel-2); padding:18px 20px; transition:background .25s ease;}
-  .metric:hover{background:#1e2330;}
+  .metric{background:var(--panel-2); padding:18px 20px; transition:background .25s ease, transform .25s cubic-bezier(.22,1.4,.36,1);}
+  .metric:hover{background:#1e2330; transform:translateY(-3px);}
   .metric .lbl{font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase; color:var(--fg-faint);}
   .metric .val{font-family:'Oswald',sans-serif; font-size:30px; margin-top:6px; font-variant-numeric:tabular-nums;}
   .metric .sub{font-size:11.5px; color:var(--fg-dim); margin-top:4px;}
@@ -168,7 +184,8 @@
   .sim-title{font-family:'Oswald',sans-serif; font-size:18px; text-transform:uppercase; letter-spacing:0.02em;}
   .sim-title span{color:var(--fg-dim); font-family:'IBM Plex Mono',monospace; font-size:12px; text-transform:none; letter-spacing:0; margin-left:8px;}
   .toggle-group{display:inline-flex; border:1px solid var(--line); border-radius:4px; overflow:hidden; font-family:'IBM Plex Mono',monospace; font-size:12px;}
-  .toggle-group button{background:transparent; color:var(--fg-dim); border:none; padding:8px 14px; cursor:pointer; letter-spacing:0.04em;}
+  .toggle-group button{background:transparent; color:var(--fg-dim); border:none; padding:8px 14px; cursor:pointer; letter-spacing:0.04em; transition:background .2s ease, color .2s ease, transform .15s ease;}
+  .toggle-group button:active{transform:scale(.96);}
   .toggle-group button.active{background:var(--magenta); color:#0a0c12; font-weight:600;}
   .toggle-group button:focus-visible{outline:2px solid var(--cyan); outline-offset:-2px;}
   .toggle-group button[data-team="red"].active{background:var(--red);}
@@ -229,8 +246,8 @@
   /* ---------- findings ---------- */
   .findings{display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:8px; overflow:hidden;}
   @media (max-width:760px){.findings{grid-template-columns:1fr;}}
-  .finding{background:var(--panel); padding:28px; display:flex; gap:18px; transition:background .25s ease;}
-  .finding:hover{background:#161a26;}
+  .finding{background:var(--panel); padding:28px; display:flex; gap:18px; transition:background .25s ease, transform .25s cubic-bezier(.22,1.4,.36,1);}
+  .finding:hover{background:#161a26; transform:translateY(-3px);}
   .finding:hover .idx{color:var(--magenta-dim);}
   .finding .idx{transition:color .25s ease;}
   .finding .idx{font-family:'Oswald',sans-serif; font-size:34px; color:var(--line); line-height:1; flex:none;}
@@ -751,11 +768,17 @@
   var rbSpeed = document.getElementById('rb-speed');
   var rbThrottle = document.getElementById('rb-throttle');
   var rbTyre = document.getElementById('rb-tyre');
+  var rbShell = document.querySelector('#redblue .slider-shell');
+  var rbPrevEps = 0;
   var BASE_TELEMETRY = { speed: 312.4, throttle: 97.0, tyre: 18.0 };
 
   function rbRender(){
     var d = rbData[rbTeam][rbEps];
     var attacking = rbEps === 1;
+    if (attacking && rbPrevEps === 0 && !reduceMotion){
+      rbShell.classList.remove('pulse-attack'); void rbShell.offsetWidth; rbShell.classList.add('pulse-attack');
+    }
+    rbPrevEps = rbEps;
     var sign = attacking ? -1 : 1; // illustrative: attack nudges readings down
     var mult = attacking ? 1 + sign * 0.02 : 1;
     rbSpeed.textContent = (BASE_TELEMETRY.speed * mult).toFixed(1) + ' km/h';
@@ -832,7 +855,8 @@
       var val = to * easeOutCubic(t);
       el.textContent = decimals ? val.toFixed(decimals) : Math.round(val).toLocaleString('en-US');
       el.textContent += suffix;
-      if (t < 1) requestAnimationFrame(frame);
+      if (t < 1) { requestAnimationFrame(frame); }
+      else { el.classList.add('pop'); el.addEventListener('animationend', function(){ el.classList.remove('pop'); }, { once: true }); }
     }
     requestAnimationFrame(frame);
   }
