@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="description" content="Interactive portfolio site presenting adversarial ML research on F1 telemetry pit-stop prediction: a live attack/defense simulator built from real notebook results.">
+<meta name="description" content="Interactive portfolio site presenting adversarial ML research on F1 telemetry pit-stop prediction: a live Red Team / Blue Team attack-and-defence walkthrough built from real notebook results.">
 <title>Pit Wall Adversary</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,6 +28,7 @@
     color-scheme: dark;
   }
   *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
   body{
     background:var(--ink);
     color:var(--fg);
@@ -38,8 +39,15 @@
     overflow-x:hidden;
   }
   @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
     *{animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important;}
   }
+
+  /* ---------- scroll reveal + progress ---------- */
+  #scroll-progress{position:fixed; top:0; left:0; height:2px; width:0%; z-index:100;
+    background:linear-gradient(90deg, var(--cyan), var(--magenta)); transition:width .08s linear;}
+  .reveal{opacity:0; transform:translateY(18px); transition:opacity .7s cubic-bezier(.16,.8,.3,1), transform .7s cubic-bezier(.16,.8,.3,1);}
+  .reveal.in{opacity:1; transform:none;}
 
   /* ---------- shared ---------- */
   .wrap{max-width:1180px; margin:0 auto; padding-inline:24px;}
@@ -64,7 +72,10 @@
   .brand-dot{width:9px; height:9px; border-radius:50%; background:var(--magenta); box-shadow:0 0 10px var(--magenta); flex:none;}
   .navlinks{display:flex; gap:26px; font-family:'IBM Plex Mono',monospace; font-size:12.5px; letter-spacing:0.05em; text-transform:uppercase; color:var(--fg-dim);}
   .navlinks a{text-decoration:none; transition:color .15s ease; position:relative; padding-bottom:2px;}
+  .navlinks a::after{content:""; position:absolute; left:0; right:100%; bottom:-3px; height:1px; background:var(--cyan); transition:right .25s ease;}
   .navlinks a:hover{color:var(--fg);}
+  .navlinks a.active{color:var(--cyan);}
+  .navlinks a.active::after{right:0;}
   .navlinks a:focus-visible{outline:1px solid var(--cyan); outline-offset:3px;}
   @media (max-width:720px){ .navlinks{display:none;} }
 
@@ -129,7 +140,8 @@
   .pipeline{display:grid; grid-template-columns:repeat(5,1fr); gap:2px; background:var(--line);}
   @media (max-width:900px){.pipeline{grid-template-columns:1fr 1fr;}}
   @media (max-width:520px){.pipeline{grid-template-columns:1fr;}}
-  .stage{background:var(--panel); padding:24px 20px; position:relative;}
+  .stage{background:var(--panel); padding:24px 20px; position:relative; transition:transform .25s ease, background .25s ease;}
+  .stage:hover{transform:translateY(-4px);}
   .stage .n{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--fg-faint); letter-spacing:0.1em;}
   .stage h3{font-size:15px; margin:10px 0 8px; text-transform:none; letter-spacing:0; font-weight:600; font-family:'IBM Plex Sans';}
   .stage p{font-size:12.8px; color:var(--fg-dim); line-height:1.55; margin:0;}
@@ -144,7 +156,8 @@
   @media (max-width:600px){.dash{padding:22px 18px;}}
   .metric-row{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:6px; overflow:hidden; margin-bottom:36px;}
   @media (max-width:760px){.metric-row{grid-template-columns:1fr 1fr;}}
-  .metric{background:var(--panel-2); padding:18px 20px;}
+  .metric{background:var(--panel-2); padding:18px 20px; transition:background .25s ease;}
+  .metric:hover{background:#1e2330;}
   .metric .lbl{font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase; color:var(--fg-faint);}
   .metric .val{font-family:'Oswald',sans-serif; font-size:30px; margin-top:6px; font-variant-numeric:tabular-nums;}
   .metric .sub{font-size:11.5px; color:var(--fg-dim); margin-top:4px;}
@@ -157,6 +170,22 @@
   .toggle-group{display:inline-flex; border:1px solid var(--line); border-radius:4px; overflow:hidden; font-family:'IBM Plex Mono',monospace; font-size:12px;}
   .toggle-group button{background:transparent; color:var(--fg-dim); border:none; padding:8px 14px; cursor:pointer; letter-spacing:0.04em;}
   .toggle-group button.active{background:var(--magenta); color:#0a0c12; font-weight:600;}
+  .toggle-group button:focus-visible{outline:2px solid var(--cyan); outline-offset:-2px;}
+  .toggle-group button[data-team="red"].active{background:var(--red);}
+  .toggle-group button[data-team="blue"].active{background:var(--cyan);}
+  .toggle-group .dot{display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:7px; vertical-align:1px;}
+  .toggle-group button[data-team="red"] .dot{background:var(--red); box-shadow:0 0 6px var(--red);}
+  .toggle-group button[data-team="blue"] .dot{background:var(--cyan); box-shadow:0 0 6px var(--cyan);}
+  .toggle-group button.active .dot{background:#0a0c12; box-shadow:none;}
+
+  /* ---------- red/blue team ---------- */
+  .rb-team-prompt{font-size:13.5px; color:var(--fg-dim); margin:14px 0 0; line-height:1.6;}
+
+  details.tech-toggle summary{cursor:pointer; font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:0.07em; text-transform:uppercase; color:var(--cyan); padding:4px 0 20px; list-style:none; display:flex; align-items:center; gap:8px;}
+  details.tech-toggle summary::-webkit-details-marker{display:none;}
+  details.tech-toggle summary::before{content:"+"; font-size:15px; width:14px;}
+  details.tech-toggle[open] summary::before{content:"–";}
+  details.tech-toggle summary:focus-visible{outline:2px solid var(--cyan); outline-offset:3px;}
 
   .sim-grid{display:grid; grid-template-columns:1.1fr 1fr; gap:36px; align-items:start; margin-top:24px;}
   @media (max-width:900px){.sim-grid{grid-template-columns:1fr;}}
@@ -200,7 +229,10 @@
   /* ---------- findings ---------- */
   .findings{display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:8px; overflow:hidden;}
   @media (max-width:760px){.findings{grid-template-columns:1fr;}}
-  .finding{background:var(--panel); padding:28px; display:flex; gap:18px;}
+  .finding{background:var(--panel); padding:28px; display:flex; gap:18px; transition:background .25s ease;}
+  .finding:hover{background:#161a26;}
+  .finding:hover .idx{color:var(--magenta-dim);}
+  .finding .idx{transition:color .25s ease;}
   .finding .idx{font-family:'Oswald',sans-serif; font-size:34px; color:var(--line); line-height:1; flex:none;}
   .finding h3{font-size:15.5px; font-family:'IBM Plex Sans'; text-transform:none; letter-spacing:0; font-weight:600; margin-bottom:8px;}
   .finding p{font-size:13.5px; color:var(--fg-dim); line-height:1.65; margin:0;}
@@ -241,12 +273,14 @@
 <body>
 
 
+<div id="scroll-progress"></div>
 <nav>
   <div class="nav-inner">
     <div class="brand"><span class="brand-dot"></span>PIT&nbsp;WALL&nbsp;ADVERSARY</div>
     <div class="navlinks">
       <a href="#problem">Problem</a>
       <a href="#method">Method</a>
+      <a href="#redblue">Red vs Blue</a>
       <a href="#dashboard">Dashboard</a>
       <a href="#findings">Findings</a>
       <a href="#about">About</a>
@@ -263,16 +297,16 @@
       <h1>Adversarial ML meets the <span class="hl">pit wall.</span></h1>
       <p class="lede">A ±2% telemetry perturbation — invisible to a driver, an engineer, or a dashboard — is enough to silently blind a pit-stop prediction model, without moving its accuracy score by a single point. This is the research, rebuilt as a live instrument panel.</p>
       <div class="cta-row">
-        <a class="btn btn-primary" href="#dashboard">Run the attack simulator</a>
+        <a class="btn btn-primary" href="#redblue">Run the attack simulator</a>
         <a class="btn btn-ghost" href="paper.pdf" id="paper-link" target="_blank" rel="noopener">Read the paper</a>
       </div>
     </div>
-    <div class="telemetry-card">
+    <div class="telemetry-card reveal">
       <div class="tc-row"><span class="tc-label">MODEL</span><span class="tc-val">RandomForest · 300 trees</span></div>
       <div class="tc-row"><span class="tc-label">TARGET</span><span class="tc-val">Pit within next 2 laps</span></div>
       <div class="tc-row"><span class="tc-label">EVENT PREVALENCE</span><span class="tc-val warn">14 / 2,586 laps · 0.5%</span></div>
-      <div class="tc-row"><span class="tc-label">BASELINE ACCURACY</span><span class="tc-val">99.4%</span></div>
-      <div class="tc-row"><span class="tc-label">BASELINE F1 (rare class)</span><span class="tc-val warn">0.118 tuned</span></div>
+      <div class="tc-row"><span class="tc-label">BASELINE ACCURACY</span><span class="tc-val"><span class="count" data-to="99.4" data-decimals="1" data-suffix="%">0.0%</span></span></div>
+      <div class="tc-row"><span class="tc-label">BASELINE F1 (rare class)</span><span class="tc-val warn"><span class="count" data-to="0.118" data-decimals="3" data-suffix=" tuned">0.000 tuned</span></span></div>
       <div class="tc-row"><span class="tc-label">PEAK CONFIDENCE UNDER ATTACK</span><span class="tc-val warn">17.3% → 9.75%</span></div>
       <svg class="spark" viewBox="0 0 300 64" preserveAspectRatio="none" role="img" aria-label="Illustrative telemetry trace">
         <polyline points="0,40 20,34 40,42 60,28 80,36 100,20 120,32 140,16 160,30 180,44 200,26 220,38 240,18 260,30 280,22 300,34" fill="none" stroke="#2ad9c4" stroke-width="1.6" opacity="0.85"/>
@@ -291,7 +325,7 @@
       </div>
       <div class="desc">Formula 1 pit-wall software increasingly leans on ML to call strategy in real time. This project asks a question GRC frameworks are only starting to ask of ML systems: what happens when the telemetry feeding that model is quietly manipulated?</div>
     </div>
-    <div class="problem-grid">
+    <div class="problem-grid reveal">
       <div>
         <p>This research investigates the vulnerability of machine learning models used in <strong>Formula 1 telemetry-driven decision systems</strong> to adversarial manipulation, and evaluates robust training as a mitigation strategy.</p>
         <p>Using public 2023-season telemetry accessed via the <strong>FastF1</strong> library, the study targets a realistic operational task: predicting whether a car will pit within the next two laps, and measuring how small, malicious perturbations in telemetry data degrade model confidence and decision-making — the same failure mode that threatens any safety-critical, low-prevalence detection system, from race strategy to fraud and intrusion alerting.</p>
@@ -321,32 +355,71 @@
     </div>
   </div>
   <div class="pipeline">
-    <div class="stage">
+    <div class="stage reveal">
       <div class="n">01</div>
       <h3>Telemetry access</h3>
       <p>Smoke-tested the FastF1 client against live session data — lap times, sectors, tyre state, car telemetry — for three 2023 Grands Prix.</p>
     </div>
-    <div class="stage">
+    <div class="stage reveal">
       <div class="n">02</div>
       <h3>Dataset construction</h3>
       <p>Engineered lap-level features (sector times, tyre life, rolling lap-time mean/std) and labelled <span class="mono">PitWithinNextNLaps</span> across 2,586 laps.</p>
     </div>
-    <div class="stage">
+    <div class="stage reveal">
       <div class="n">03</div>
       <h3>Baseline model</h3>
       <p>Trained a class-balanced Random Forest on an 80/20 split and tuned the decision threshold for the rare pit-stop class.</p>
     </div>
-    <div class="stage attack">
+    <div class="stage attack reveal">
       <div class="n">04</div>
       <h3>Adversarial attack</h3>
       <p>Injected ±2% noise into test-set telemetry and re-scored the same model — no retraining, pure inference-time manipulation.</p>
       <span class="tag">Red team</span>
     </div>
-    <div class="stage defense">
+    <div class="stage defense reveal">
       <div class="n">05</div>
       <h3>Robust training</h3>
       <p>Retrained on clean + noise-augmented data, then swept attack strength from ε=0.005 to ε=0.05 to map the defense's real limits.</p>
       <span class="tag">Blue team</span>
+    </div>
+  </div>
+</section>
+
+<section id="redblue">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Red Team / Blue Team</div>
+        <h2>Can you fool the model — and can the defence stop you?</h2>
+      </div>
+      <div class="desc">Every lap, an F1 car streams live telemetry — speed, throttle, brake, tyre wear — into a strategy model that predicts one thing: will this car pit in the next two laps? An <b class="mono" style="color:var(--fg); font-style:normal;">adversarial perturbation</b> is a small, deliberate change to that telemetry, designed to fool the model (here, ε = ±2% of each value).</div>
+    </div>
+
+    <div class="reveal" style="max-width:600px; margin:0 auto;">
+      <div class="toggle-group" role="tablist" aria-label="Choose a team">
+        <button type="button" class="active" data-team="red" role="tab" aria-selected="true"><span class="dot" aria-hidden="true"></span>Red Team — Attack</button>
+        <button type="button" data-team="blue" role="tab" aria-selected="false"><span class="dot" aria-hidden="true"></span>Blue Team — Defend</button>
+      </div>
+      <p class="rb-team-prompt" id="rb-prompt">Can you manipulate the telemetry enough to influence the model?</p>
+
+      <div class="slider-shell">
+        <div class="tc-row"><span class="tc-label">Speed</span><span class="tc-val" id="rb-speed">312.4 km/h</span></div>
+        <div class="tc-row"><span class="tc-label">Throttle</span><span class="tc-val" id="rb-throttle">97.0%</span></div>
+        <div class="tc-row"><span class="tc-label">Tyre life</span><span class="tc-val" id="rb-tyre">18.0 laps</span></div>
+        <p style="font-size:11px; color:var(--fg-faint); margin:8px 0 0;">Illustrative example lap, scaled by the attack strength below — not the model's real input vector.</p>
+
+        <label class="cur" for="rb-slider" style="margin-top:18px;"><span class="k">How much are you changing the telemetry?</span><span class="v" id="rb-eps-val">0%</span></label>
+        <input type="range" id="rb-slider" min="0" max="1" step="1" value="0" aria-label="Telemetry perturbation: off or ±2 percent">
+        <div class="ticks"><span data-i="0" class="active">0% — clean</span><span data-i="1">±2% — attack</span></div>
+
+        <div class="readout">
+          <div><div class="k">Peak model confidence</div><div class="v" id="rb-conf">17.3%</div></div>
+          <div><div class="k">Prediction</div><div class="v" id="rb-pred" style="font-size:15px;">Pit flagged</div></div>
+        </div>
+        <div class="verdict" id="rb-status">Attack status: <b>off</b> — clean telemetry, accuracy 99.4%.</div>
+      </div>
+
+      <p style="font-size:13px; color:var(--fg-dim); line-height:1.7; margin-top:20px;"><b style="color:var(--fg);">Here's the catch:</b> headline accuracy never moves from <b class="stat" style="color:var(--magenta);">99.4%</b>, clean or attacked. Defence narrows the damage — the robust model holds its confidence better than the undefended one — but doesn't erase it. Accuracy alone can't tell you whether an ML system is secure.</p>
     </div>
   </div>
 </section>
@@ -356,17 +429,19 @@
     <div class="section-head">
       <div>
         <div class="eyebrow">Interactive Dashboard</div>
-        <h2>Run the attack yourself.</h2>
+        <h2>The technical deep dive.</h2>
       </div>
-      <div class="desc">Every number below is a real result recorded in the notebooks — nothing here is simulated for effect. Drag the slider to sweep attack strength against the robust model.</div>
+      <div class="desc">Every number below is a real result recorded in the notebooks — nothing here is simulated for effect.</div>
     </div>
 
-    <div class="dash">
+    <details class="tech-toggle" open>
+    <summary>Full epsilon sweep, methodology &amp; raw metrics</summary>
+    <div class="dash reveal">
       <div class="metric-row" id="metric-row">
-        <div class="metric"><div class="lbl">Dataset</div><div class="val" style="font-size:26px;">2,586 laps</div><div class="sub">3 GPs · 2023 season</div></div>
-        <div class="metric hot"><div class="lbl">Pit events</div><div class="val">14</div><div class="sub">0.54% of laps — extreme imbalance</div></div>
-        <div class="metric"><div class="lbl">Baseline accuracy</div><div class="val">99.4%</div><div class="sub">…while missing the rare class</div></div>
-        <div class="metric cool"><div class="lbl">Baseline PR-AUC</div><div class="val">0.028</div><div class="sub">The metric that tells the truth</div></div>
+        <div class="metric"><div class="lbl">Dataset</div><div class="val" style="font-size:26px;"><span class="count" data-to="2586" data-suffix=" laps">0 laps</span></div><div class="sub">3 GPs · 2023 season</div></div>
+        <div class="metric hot"><div class="lbl">Pit events</div><div class="val"><span class="count" data-to="14">0</span></div><div class="sub">0.54% of laps — extreme imbalance</div></div>
+        <div class="metric"><div class="lbl">Baseline accuracy</div><div class="val"><span class="count" data-to="99.4" data-decimals="1" data-suffix="%">0.0%</span></div><div class="sub">…while missing the rare class</div></div>
+        <div class="metric cool"><div class="lbl">Baseline PR-AUC</div><div class="val"><span class="count" data-to="0.028" data-decimals="3">0.000</span></div><div class="sub">The metric that tells the truth</div></div>
       </div>
 
       <div class="sim-head">
@@ -411,6 +486,7 @@
         <div class="range-plot" id="range-plot"></div>
       </div>
     </div>
+    </details>
   </div>
 </section>
 
@@ -423,19 +499,19 @@
       </div>
     </div>
     <div class="findings">
-      <div class="finding">
+      <div class="finding reveal">
         <div class="idx">01</div>
         <div><h3>Accuracy hid the failure completely.</h3><p>The baseline model held <span class="stat">99.4% accuracy</span> both before and after the attack — because it almost never has to be right about the rare class to score well. Accuracy is the wrong instrument for a 0.5%-prevalence event.</p></div>
       </div>
-      <div class="finding">
+      <div class="finding reveal">
         <div class="idx">02</div>
         <div><h3>A ±2% perturbation halved peak confidence.</h3><p>Maximum predicted pit-stop probability fell from <span class="stat">17.3% → 9.75%</span> under attack — an imperceptible telemetry shift with an outsized effect on the model's only useful signal.</p></div>
       </div>
-      <div class="finding">
+      <div class="finding reveal">
         <div class="idx">03</div>
         <div><h3>Robust training works — up to a budget.</h3><p>Noise-augmented training preserved detection at <span class="stat">ε≤0.01</span> (F1 0.10–0.118), then collapsed to <span class="stat">F1 0.0</span> at ε=0.02 and beyond, with predicted positives dropping from 17 to 3.</p></div>
       </div>
-      <div class="finding">
+      <div class="finding reveal">
         <div class="idx">04</div>
         <div><h3>Defense is mitigation, not cure.</h3><p>Robust training is a real, measurable improvement at small perturbations — and an honest limit past them. That residual risk, not a false "solved," is what a security assessment should report.</p></div>
       </div>
@@ -482,7 +558,7 @@
 <section id="about">
   <div class="wrap">
     <div class="about-grid">
-      <div class="avatar" aria-hidden="true">KK</div>
+      <div class="avatar reveal" aria-hidden="true">KK</div>
       <div>
         <div class="eyebrow">About the researcher</div>
         <h2>Khadija Khurum</h2>
@@ -652,6 +728,146 @@
   });
 
   render(1);
+
+  // ---- Red Team / Blue Team mini-experiment ----
+  // Real recorded combos only: {model clean, model attacked ±2%}. No fabricated points.
+  var rbData = {
+    red:  { name: 'Baseline (undefended)',
+      0: { conf: 17.3, pred: 'Pit flagged',  status: 'off',  note: 'Baseline model, no attack. This is its best-case reading — peak confidence 17.3%.' },
+      1: { conf: 9.75, pred: 'Pit missed',   status: 'on',   note: 'Same model, ±2% telemetry perturbation. Confidence nearly halves and the pit-stop signal is lost — accuracy still reads 99.4%.' } },
+    blue: { name: 'Robust (noise-augmented)',
+      0: { conf: 22.0, pred: 'Pit flagged',  status: 'off',  note: 'Robust model, no attack. Noise-augmented training actually improves clean-data confidence over the baseline.' },
+      1: { conf: 12.5, pred: 'Pit missed',   status: 'on',   note: 'Same robust model under the same ±2% attack. Confidence still drops, but less steeply than the undefended baseline — the defence is helping, not solving it.' } }
+  };
+  var rbTeam = 'red', rbEps = 0;
+  var rbTeamBtns = document.querySelectorAll('#redblue .toggle-group button');
+  var rbSlider = document.getElementById('rb-slider');
+  var rbEpsVal = document.getElementById('rb-eps-val');
+  var rbTicks = document.querySelectorAll('#redblue .ticks span');
+  var rbPrompt = document.getElementById('rb-prompt');
+  var rbConf = document.getElementById('rb-conf');
+  var rbPred = document.getElementById('rb-pred');
+  var rbStatus = document.getElementById('rb-status');
+  var rbSpeed = document.getElementById('rb-speed');
+  var rbThrottle = document.getElementById('rb-throttle');
+  var rbTyre = document.getElementById('rb-tyre');
+  var BASE_TELEMETRY = { speed: 312.4, throttle: 97.0, tyre: 18.0 };
+
+  function rbRender(){
+    var d = rbData[rbTeam][rbEps];
+    var attacking = rbEps === 1;
+    var sign = attacking ? -1 : 1; // illustrative: attack nudges readings down
+    var mult = attacking ? 1 + sign * 0.02 : 1;
+    rbSpeed.textContent = (BASE_TELEMETRY.speed * mult).toFixed(1) + ' km/h';
+    rbThrottle.textContent = (BASE_TELEMETRY.throttle * mult).toFixed(1) + '%';
+    rbTyre.textContent = (BASE_TELEMETRY.tyre * mult).toFixed(1) + ' laps';
+
+    rbEpsVal.textContent = attacking ? '±2%' : '0%';
+    rbConf.textContent = d.conf.toFixed(2) + '%';
+    rbConf.style.color = attacking ? 'var(--red)' : 'var(--fg)';
+    rbPred.textContent = d.pred;
+    rbPred.style.color = d.pred === 'Pit flagged' ? 'var(--cyan)' : 'var(--red)';
+    rbStatus.innerHTML = 'Attack status: <b>' + (attacking ? 'active — ±2% telemetry perturbation' : 'off — clean telemetry') + '</b>. ' + d.note;
+    rbPrompt.textContent = rbTeam === 'red'
+      ? 'Can you manipulate the telemetry enough to influence the model?'
+      : 'The attacker has changed the telemetry. Can the defence resist it?';
+    rbTicks.forEach(function(t){ t.classList.toggle('active', Number(t.dataset.i) === rbEps); });
+  }
+
+  rbTeamBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      rbTeam = btn.dataset.team;
+      rbTeamBtns.forEach(function(b){ b.classList.toggle('active', b === btn); b.setAttribute('aria-selected', b === btn); });
+      rbRender();
+    });
+  });
+  rbSlider.addEventListener('input', function(){ rbEps = Number(rbSlider.value); rbRender(); });
+  rbTicks.forEach(function(t){
+    t.addEventListener('click', function(){ rbSlider.value = t.dataset.i; rbEps = Number(t.dataset.i); rbRender(); });
+  });
+  rbRender();
+
+  // ---- scroll progress bar ----
+  var progress = document.getElementById('scroll-progress');
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement;
+    var pct = (h.scrollTop) / ((h.scrollHeight - h.clientHeight) || 1) * 100;
+    progress.style.width = pct + '%';
+  }, { passive: true });
+
+  // ---- scroll reveal (staggered) ----
+  var revealEls = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window && !reduceMotion){
+    var seen = new WeakMap();
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (!entry.isIntersecting) return;
+        var el = entry.target;
+        var siblingIndex = seen.get(el.parentElement) || 0;
+        el.style.transitionDelay = Math.min(siblingIndex, 5) * 70 + 'ms';
+        seen.set(el.parentElement, siblingIndex + 1);
+        el.classList.add('in');
+        io.unobserve(el);
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+    revealEls.forEach(function(el){ io.observe(el); });
+  } else {
+    revealEls.forEach(function(el){ el.classList.add('in'); });
+  }
+
+  // ---- count-up digits ----
+  function easeOutCubic(t){ return 1 - Math.pow(1 - t, 3); }
+  function animateCount(el){
+    var to = parseFloat(el.dataset.to);
+    var decimals = parseInt(el.dataset.decimals || '0', 10);
+    var suffix = el.dataset.suffix || '';
+    if (reduceMotion || isNaN(to)){
+      el.textContent = to.toFixed(decimals) + suffix;
+      return;
+    }
+    var start = performance.now(), dur = 1200;
+    function frame(now){
+      var t = Math.min((now - start) / dur, 1);
+      var val = to * easeOutCubic(t);
+      el.textContent = decimals ? val.toFixed(decimals) : Math.round(val).toLocaleString('en-US');
+      el.textContent += suffix;
+      if (t < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+  var counters = document.querySelectorAll('.count');
+  if ('IntersectionObserver' in window){
+    var cio = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (!entry.isIntersecting) return;
+        animateCount(entry.target);
+        cio.unobserve(entry.target);
+      });
+    }, { threshold: 0.6 });
+    counters.forEach(function(el){ cio.observe(el); });
+  } else {
+    counters.forEach(animateCount);
+  }
+
+  // ---- nav scrollspy ----
+  var navLinks = document.querySelectorAll('.navlinks a');
+  var sections = Array.prototype.slice.call(navLinks).map(function(a){
+    return document.querySelector(a.getAttribute('href'));
+  }).filter(Boolean);
+  if ('IntersectionObserver' in window && sections.length){
+    var sio = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        var link = document.querySelector('.navlinks a[href="#' + entry.target.id + '"]');
+        if (!link) return;
+        if (entry.isIntersecting) {
+          navLinks.forEach(function(a){ a.classList.remove('active'); });
+          link.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-45% 0px -50% 0px' });
+    sections.forEach(function(s){ sio.observe(s); });
+  }
 })();
 </script>
 
